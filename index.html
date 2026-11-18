@@ -21,7 +21,7 @@
       font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; letter-spacing: .16em;
     }
     .gift {
-      position: absolute; left: var(--gift-x, 50%); top: var(--gift-y, 82%);
+      position: absolute; left: var(--gift-x, 36%); top: var(--gift-y, 82%);
       transform: translateX(-50%); width: 58px; height: 52px; padding: 0;
       border: 0; background: transparent; color: #ffb7da; cursor: pointer;
       touch-action: manipulation; -webkit-tap-highlight-color: transparent;
@@ -158,7 +158,7 @@
       centerX = width * (width < 720 ? .5 : .55);
       centerY = height * (width < 720 && height > width ? .55 : .51);
       const treeBase = centerY + 4.25 * tiltCos * focal / (12.8 + 4.25 * tiltSin);
-      gift.style.setProperty('--gift-x', `${centerX}px`);
+      gift.style.setProperty('--gift-x', `${Math.max(32, centerX - focal * .25)}px`);
       gift.style.setProperty('--gift-y', `${Math.min(height - 56, treeBase + 6)}px`);
       background = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(width, height) * .62);
       background.addColorStop(0, '#1b0b1d');
