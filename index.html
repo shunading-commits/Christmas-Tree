@@ -20,6 +20,47 @@
       display: block; margin-top: .6em; font-size: .6em; font-style: normal;
       font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; letter-spacing: .16em;
     }
+    .gift {
+      position: absolute; left: var(--gift-x, 50%); top: var(--gift-y, 82%);
+      transform: translateX(-50%); width: 58px; height: 52px; padding: 0;
+      border: 0; background: transparent; color: #ffb7da; cursor: pointer;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .gift:disabled { cursor: default; }
+    .gift:focus-visible { outline: 2px solid #ffe0ef; border-radius: 9px; }
+    .gift svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 7px #ff79b8b0); }
+    .gift:hover svg { filter: drop-shadow(0 0 10px #ffc6e5); }
+    .gift .lid { transform-box: fill-box; transform-origin: center bottom; }
+    .gift .sparkles { opacity: 0; transform-origin: 29px 26px; }
+    .gift.opening .lid { animation: lift .6s cubic-bezier(.21,.7,.38,1) both; }
+    .gift.opening .sparkles { animation: burst .6s ease-out both; }
+    @keyframes lift {
+      35% { transform: translateY(-9px) rotate(14deg); }
+      to { transform: translate(6px,-19px) rotate(27deg); opacity: .25; }
+    }
+    @keyframes burst {
+      30% { opacity: 1; }
+      to { transform: translateY(-14px) scale(1.5); opacity: 0; }
+    }
+    dialog {
+      box-sizing: border-box; width: min(92vw, 420px); max-height: 92dvh;
+      padding: 10px; overflow: auto; color: #fff3f9; background: #1b0d1d;
+      border: 1px solid #73435f; border-radius: 18px; text-align: center;
+      font: 14px/1.4 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    }
+    dialog[open] { animation: reveal .25s ease-out both; }
+    dialog::backdrop { background: #08050de0; }
+    @keyframes reveal { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+    .gift-image { display: block; width: 100%; height: auto; max-height: 76dvh; object-fit: contain; border-radius: 12px; }
+    .gift-image[hidden], .gift-note[hidden] { display: none; }
+    .gift-note { padding: 24px 14px 12px; }
+    .close-gift {
+      margin: 9px 0 1px; padding: 7px 20px; color: inherit; background: #382034;
+      border: 1px solid #82516e; border-radius: 20px; cursor: pointer;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gift.opening .lid, .gift.opening .sparkles, dialog[open] { animation: none; }
+    }
     @media (max-width: 720px) and (orientation: portrait) {
       h1 { top: 7%; left: 0; width: 100%; text-align: center; font-size: clamp(1.65rem, 7vw, 3rem); }
     }
@@ -31,6 +72,26 @@
   <main>
     <canvas role="img" aria-label="Pink Christmas lights, a heart topper, and falling snow"></canvas>
     <h1>Merry Christmas<span lang="zh-Hans">潘嘉彬</span></h1>
+    <button type="button" class="gift" aria-label="打开圣诞礼物" aria-haspopup="dialog" aria-controls="gift-dialog">
+      <svg viewBox="0 0 58 52" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="11" y="25" width="36" height="22" rx="4" fill="#4c2442" stroke="currentColor" stroke-width="1.35" stroke-dasharray="1 2"/>
+        <path d="M25 26v20m8-20v20" stroke="#ff9fcb" stroke-width="1.2"/>
+        <g class="lid" stroke="currentColor" stroke-width="1.4">
+          <rect x="8" y="18" width="42" height="9" rx="3" fill="#6c3155" stroke-dasharray="1 1.8"/>
+          <path d="M29 18c-9 0-17-4-13-9 3-4 10 0 13 9Zm0 0c9 0 17-4 13-9-3-4-10 0-13 9Z"/>
+          <path d="M25 19v7m8-7v7" stroke="#ffe0f0"/>
+        </g>
+        <g class="sparkles" fill="#ffe4f4">
+          <circle cx="8" cy="15" r="1.4"/><circle cx="18" cy="6" r="1"/>
+          <circle cx="31" cy="9" r="1.6"/><circle cx="43" cy="5" r="1.1"/><circle cx="53" cy="17" r="1.5"/>
+        </g>
+      </svg>
+    </button>
+    <dialog id="gift-dialog" aria-label="圣诞礼物" lang="zh-Hans">
+      <p class="gift-note" role="status" hidden></p>
+      <img class="gift-image" alt="抖音礼物领取图片" hidden>
+      <form method="dialog"><button class="close-gift">关闭</button></form>
+    </dialog>
   </main>
   <script>
     const canvas = document.querySelector('canvas');
@@ -83,6 +144,7 @@
     }));
     let width, height, focal, centerX, centerY, background;
     let lastTime = 0, elapsed = 0, frame;
+    const gift = document.querySelector('.gift');
 
     function resize() {
       const bounds = canvas.getBoundingClientRect();
@@ -95,6 +157,9 @@
       focal = Math.min(height * .87, width * 1.19);
       centerX = width * (width < 720 ? .5 : .55);
       centerY = height * (width < 720 && height > width ? .55 : .51);
+      const treeBase = centerY + 4.25 * tiltCos * focal / (12.8 + 4.25 * tiltSin);
+      gift.style.setProperty('--gift-x', `${centerX}px`);
+      gift.style.setProperty('--gift-y', `${Math.min(height - 56, treeBase + 6)}px`);
       background = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(width, height) * .62);
       background.addColorStop(0, '#1b0b1d');
       background.addColorStop(1, '#08050d');
@@ -148,6 +213,45 @@
       lastTime = 0;
       if (!motion.matches && !document.hidden) frame = requestAnimationFrame(animate);
     }
+
+    const giftDialog = document.querySelector('#gift-dialog');
+    const giftImage = document.querySelector('.gift-image');
+    const giftNote = document.querySelector('.gift-note');
+
+    async function revealImage() {
+      const keyText = new URLSearchParams(location.hash.slice(1)).get('gift');
+      if (!keyText || !/^[A-Za-z0-9_-]{43}$/.test(keyText)) return null;
+      const keyBytes = Uint8Array.from(atob(keyText.replaceAll('-', '+').replaceAll('_', '/') + '='), c => c.charCodeAt(0));
+      const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
+      const response = await fetch('./gift.bin');
+      if (!response.ok) throw new Error('Gift file could not be loaded');
+      const packed = new Uint8Array(await response.arrayBuffer());
+      const jpeg = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: packed.subarray(0, 12) }, key, packed.subarray(12));
+      const url = URL.createObjectURL(new Blob([jpeg], { type: 'image/jpeg' }));
+      giftImage.src = url;
+      return url;
+    }
+
+    gift.addEventListener('click', async () => {
+      gift.disabled = true;
+      gift.classList.add('opening');
+      const imageReady = (giftImage.getAttribute('src') ? Promise.resolve(giftImage.src) : revealImage()).catch(() => false);
+      await new Promise(resolve => setTimeout(resolve, motion.matches ? 0 : 580));
+      giftImage.hidden = true;
+      giftNote.hidden = false;
+      giftNote.textContent = '正在打开礼物…';
+      giftDialog.showModal();
+      const image = await imageReady;
+      giftImage.hidden = !image;
+      giftNote.hidden = Boolean(image);
+      giftNote.textContent = image === null ? '请用收到的完整礼物链接打开。' : '礼物暂时打不开，请关闭后再试一次。';
+    });
+
+    giftDialog.addEventListener('close', () => {
+      gift.classList.remove('opening');
+      gift.disabled = false;
+      gift.focus();
+    });
 
     addEventListener('resize', resize);
     document.addEventListener('visibilitychange', updateMotion);
