@@ -28,6 +28,11 @@
     }
     .gift:disabled { cursor: default; }
     .gift:focus-visible { outline: 2px solid #ffe0ef; border-radius: 9px; }
+    .gift-label {
+      position: absolute; left: 0; right: 0; bottom: calc(100% - 4px);
+      color: #ffd5eb; text-shadow: 0 0 8px #ff80be;
+      font: 600 14px/1.25 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    }
     .gift svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 7px #ff79b8b0); }
     .gift:hover svg { filter: drop-shadow(0 0 10px #ffc6e5); }
     .gift .lid { transform-box: fill-box; transform-origin: center bottom; }
@@ -72,7 +77,8 @@
   <main>
     <canvas role="img" aria-label="Pink Christmas lights, a heart topper, and falling snow"></canvas>
     <h1>Merry Christmas<span lang="zh-Hans">潘嘉彬</span></h1>
-    <button type="button" class="gift" aria-label="打开圣诞礼物" aria-haspopup="dialog" aria-controls="gift-dialog">
+    <button type="button" class="gift" aria-label="点我打开圣诞礼物" aria-haspopup="dialog" aria-controls="gift-dialog" lang="zh-Hans">
+      <span class="gift-label">点我</span>
       <svg viewBox="0 0 58 52" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <rect x="11" y="25" width="36" height="22" rx="4" fill="#4c2442" stroke="currentColor" stroke-width="1.35" stroke-dasharray="1 2"/>
         <path d="M25 26v20m8-20v20" stroke="#ff9fcb" stroke-width="1.2"/>
