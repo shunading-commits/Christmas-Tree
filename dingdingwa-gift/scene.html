@@ -25,16 +25,34 @@
     }
 
     h1 span { letter-spacing: .06em; overflow-wrap: anywhere; }
-    .gift { position: absolute; z-index: 1; left: clamp(34px, var(--gift-x, 33%), calc(100% - 34px)); top: clamp(76px, var(--gift-y, 81%), calc(100% - 36px)); transform: translate(-50%, -50%); border: 0; background: none; padding: 8px 5px; width: 66px; cursor: pointer; color: #fff0f7; filter: drop-shadow(0 0 12px #e978b78c); }
+    .gift {
+      position: absolute; z-index: 1; left: clamp(38px, var(--gift-x, 33%), calc(100% - 38px));
+      top: clamp(76px, var(--gift-y, 81%), calc(100% - 38px)); transform: translate(-50%, -50%);
+      display: grid; justify-items: center; width: 76px; min-height: 74px; padding: 0; border: 0;
+      background: none; color: #f9d0e5; cursor: pointer; isolation: isolate;
+    }
     .gift:focus-visible, .close:focus-visible { outline: 2px solid #fff0f7; outline-offset: 4px; border-radius: 8px; }
-    .tag { position: absolute; bottom: calc(100% - 2px); left: 50%; transform: translateX(-50%); padding: 3px 8px; border: 1px solid #b35c91; border-radius: 999px; background: #2d102b; color: #ffe1f1; white-space: nowrap; font: 600 14px/1.4 system-ui, sans-serif; }
-    .box { position: relative; display: block; width: 54px; height: 45px; }
-    .gift-base, .lid { position: absolute; border: 1px solid #ffbde8; box-sizing: border-box; box-shadow: inset 0 0 8px #ffc0e665; background: linear-gradient(90deg, transparent 41%, #ffc3e7 41% 59%, transparent 59%), linear-gradient(135deg,#ed8aca,#994373); border-radius: 4px; }
-    .gift-base { inset: 15px 3px 0; }
-    .lid { inset: 9px 0 auto; height: 12px; transform-origin: 12% 80%; transition: transform .43s cubic-bezier(.18,.68,.3,1.22); }
-    .lid::before, .lid::after { content: ""; position: absolute; bottom: 100%; left: 50%; width: 13px; height: 7px; border: 2px solid #ffc3e7; border-radius: 70% 70% 10% 70%; transform: translateX(-100%) rotate(18deg); }
-    .lid::after { transform: scaleX(-1) rotate(18deg); }
-    .gift[aria-expanded="true"] .lid { transform: translate(-5px,-12px) rotate(-23deg); }
+    .tag {
+      position: relative; z-index: 1; grid-area: 1 / 1; align-self: start; margin-top: -1px; white-space: nowrap;
+      padding: 0 8px; color: inherit; font: 500 14px/1.5 "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: .12em; text-indent: .12em; text-shadow: 0 0 8px #ed82bd, 0 1px 4px #190817;
+    }
+    .tag::before, .tag::after {
+      content: ""; position: absolute; top: 48%; width: 2px; height: 2px; border-radius: 50%;
+      background: #fac4df; box-shadow: 0 0 5px #ffc2e4;
+    }
+    .tag::before { left: 0; }
+    .tag::after { right: 0; }
+    .box { grid-area: 1 / 1; align-self: end; position: relative; display: block; width: 70px; height: 61px; }
+    .box::before {
+      content: ""; position: absolute; inset: 77% 0 1%; border-radius: 50%;
+      background: radial-gradient(ellipse, #e68fb856, #a6549b20 45%, transparent 72%);
+      transform: translateY(-1px);
+    }
+    .gift-base, .lid { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .lid { transform-origin: 18% 56%; transition: transform .39s cubic-bezier(.19,.73,.29,1.1); }
+    .gift:not(:disabled):hover .tag, .gift:focus-visible .tag { color: #fff2fa; }
+    .gift[aria-expanded="true"] .lid { transform: translate(-4px,-11px) rotate(-26deg); }
     dialog { box-sizing: border-box; width: min(92vw, 630px); max-height: 90vh; max-height: 90dvh; background: #1b0c1e; color: #fff0f7; border: 1px solid #aa538a; border-radius: 18px; padding: 46px 12px 12px; box-shadow: 0 14px 70px #000b; }
     dialog[open] { animation: reveal .34s ease-out both; }
     dialog::backdrop { background: #090411cf; }
@@ -51,7 +69,7 @@
     <h1>Merry Christmas<span lang="zh-Hans">%%RECIPIENT%%</span></h1>
 
     <button class="gift" type="button" aria-label="打开礼物" aria-haspopup="dialog" aria-expanded="false">
-      <span class="tag">点我</span><span class="box" aria-hidden="true"><span class="gift-base"></span><span class="lid"></span></span>
+      <span class="tag">点我</span><span class="box" aria-hidden="true"><canvas class="gift-base"></canvas><canvas class="lid"></canvas></span>
     </button>
     <dialog aria-label="礼物照片">
       <button class="close" type="button" aria-label="关闭礼物照片">×</button>
@@ -179,7 +197,111 @@
     }
 
 
+    function drawGiftArt(base, cover) {
+      const ratio = Math.min(devicePixelRatio || 1, 3);
+      const width = 70;
+      const height = 61;
+      const [body, lid] = [base, cover].map(layer => {
+        layer.width = Math.round(width * ratio);
+        layer.height = Math.round(height * ratio);
+        const ink = layer.getContext('2d');
+        ink.scale(layer.width / 76, layer.height / 66);
+        return ink;
+      });
+
+      const shades = ['#a94c84', '#e679a9', '#ffaacf', '#ffdded', '#fff4fa'];
+      let seed = 17429;
+      function sparkle() {
+        seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+        return seed / 4294967296;
+      }
+      function fleck(ink, x, y, strength) {
+        const size = .35 + sparkle() * 1.12;
+        ink.fillStyle = shades[Math.floor(sparkle() * shades.length)];
+        ink.globalAlpha = strength * (.35 + sparkle() * .65);
+        ink.fillRect(x, y, size, size);
+      }
+      function facet(ink, corners, light, shadow, density) {
+        const [a, b, c, d] = corners;
+        ink.beginPath();
+        ink.moveTo(...a);
+        for (const point of [b, c, d]) ink.lineTo(...point);
+        ink.closePath();
+        const paint = ink.createLinearGradient(...a, ...c);
+        paint.addColorStop(0, light);
+        paint.addColorStop(1, shadow);
+        ink.fillStyle = paint;
+        ink.fill();
+        ink.strokeStyle = '#e5a1c584';
+        ink.lineWidth = .5;
+        ink.stroke();
+
+        ink.save();
+        ink.clip();
+        for (let n = 0; n < density; n++) {
+          const u = sparkle();
+          const v = sparkle();
+          const x = (a[0] * (1 - u) + b[0] * u) * (1 - v) + (d[0] * (1 - u) + c[0] * u) * v;
+          const y = (a[1] * (1 - u) + b[1] * u) * (1 - v) + (d[1] * (1 - u) + c[1] * u) * v;
+          fleck(ink, x, y, .58);
+        }
+        ink.restore();
+      }
+      function edge(ink, start, end, count) {
+        ink.save();
+        ink.shadowColor = '#ea8dc3';
+        ink.shadowBlur = 3;
+        for (let n = 0; n < count; n++) {
+          const t = sparkle();
+          fleck(ink, start[0] + (end[0] - start[0]) * t + (sparkle() - .5) * 1.7,
+            start[1] + (end[1] - start[1]) * t + (sparkle() - .5) * 1.7, .9);
+        }
+        ink.restore();
+      }
+
+      facet(body, [[16,36],[49,36],[63,28],[30,28]], '#d282b28c', '#271229dc', 31);
+      facet(body, [[49,36],[63,28],[63,51],[49,59]], '#a95c9ba8', '#402245d9', 44);
+      facet(body, [[16,36],[49,36],[49,59],[16,59]], '#b76394b0', '#4a254ad1', 80);
+      facet(body, [[29,36],[34,36],[34,59],[29,59]], '#fac0e5b0', '#b75c99a8', 18);
+      edge(body, [16,36], [16,59], 19);
+      edge(body, [16,59], [49,59], 33);
+      edge(body, [49,59], [63,51], 18);
+
+      facet(lid, [[13,29],[51,29],[66,21],[28,21]], '#f2aacddd', '#a15f9ac2', 74);
+      facet(lid, [[51,29],[66,21],[66,28],[51,36]], '#ca78a7d9', '#774474dd', 24);
+      facet(lid, [[13,29],[51,29],[51,36],[13,36]], '#e79cc6db', '#a8629cdd', 45);
+      facet(lid, [[29,29],[34,29],[49,21],[44,21]], '#ffe2f1d9', '#eca0c9be', 14);
+      facet(lid, [[29,29],[34,29],[34,36],[29,36]], '#ffe2f1d9', '#d98abacb', 8);
+      edge(lid, [13,29], [51,29], 42);
+      edge(lid, [51,29], [66,21], 21);
+      edge(lid, [13,36], [51,36], 27);
+
+      lid.save();
+      lid.strokeStyle = '#f7bbdb';
+      lid.lineWidth = 1.18;
+      lid.lineCap = 'round';
+      lid.shadowColor = '#ee89bd';
+      lid.shadowBlur = 4;
+      lid.beginPath();
+      lid.moveTo(39, 25);
+      lid.bezierCurveTo(33, 24, 25, 16, 28, 13);
+      lid.bezierCurveTo(32, 9, 38, 16, 39, 25);
+      lid.bezierCurveTo(42, 17, 51, 10, 54, 14);
+      lid.bezierCurveTo(58, 18, 47, 23, 39, 25);
+      lid.moveTo(39, 25);
+      lid.bezierCurveTo(36, 26, 33, 27, 29, 27);
+      lid.moveTo(39, 25);
+      lid.bezierCurveTo(42, 25, 44, 26, 48, 27);
+      lid.stroke();
+      lid.fillStyle = '#ffe4f2';
+      lid.beginPath();
+      lid.arc(39, 25, 1.35, 0, tau);
+      lid.fill();
+      lid.restore();
+    }
+
     const gift = document.querySelector('.gift');
+    drawGiftArt(gift.querySelector('.gift-base'), gift.querySelector('.lid'));
     const dialog = document.querySelector('dialog');
     const photo = dialog.querySelector('img');
     const status = dialog.querySelector('.photo-status');
