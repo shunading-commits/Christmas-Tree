@@ -54,7 +54,15 @@
     dialog { box-sizing: border-box; width: min(92vw, 630px); max-height: 90vh; max-height: 90dvh; background: #1b0c1e; color: #fff0f7; border: 1px solid #aa538a; border-radius: 18px; padding: 46px 12px 12px; box-shadow: 0 14px 70px #000b; }
     dialog[open] { animation: reveal .34s ease-out both; }
     dialog::backdrop { background: #090411cf; }
-    dialog img { display: block; max-width: 100%; max-height: 73vh; max-height: 73dvh; object-fit: contain; margin: auto; border-radius: 9px; }
+    dialog img { display: block; max-width: 100%; max-height: calc(90vh - 114px); max-height: calc(90dvh - 114px); object-fit: contain; margin: auto; border-radius: 9px; }
+    dialog [hidden] { display: none !important; }
+    .send-gift {
+      display: flex; align-items: center; min-height: 44px; width: fit-content; box-sizing: border-box;
+      margin: 8px auto 0; padding: 0 15px; border-radius: 10px; color: #f6c6e3;
+      font: 500 14px/1.3 system-ui, sans-serif; text-decoration: none;
+    }
+    .send-gift:hover { background: #44233f; color: #fff0f7; }
+    .send-gift:focus-visible { outline: 2px solid #f6c6e3; outline-offset: -2px; }
     .close { position: absolute; right: 9px; top: 7px; background: #41223e; border: 0; border-radius: 50%; color: white; min-width: 34px; min-height: 34px; font-size: 23px; cursor: pointer; }
     .photo-status { margin: 12px; text-align: center; font: 16px system-ui, sans-serif; }
     @keyframes reveal { from { opacity: 0; transform: translateY(12px) scale(.95); } to { opacity: 1; transform: none; } }
@@ -73,6 +81,7 @@
       <button class="close" type="button" aria-label="关闭礼物照片">×</button>
       <p class="photo-status" role="status" hidden></p>
       <img alt="送给你的圣诞礼物照片" hidden>
+      <a class="send-gift" href="/" hidden>我也送一份</a>
     </dialog>
   </main>
   <script>
@@ -347,6 +356,7 @@
     const dialog = document.querySelector('dialog');
     const photo = dialog.querySelector('img');
     const status = dialog.querySelector('.photo-status');
+    const sendGift = dialog.querySelector('.send-gift');
     const greeting = document.querySelector('h1 span');
     const preview = location.pathname === '/scene';
     if (preview) {
@@ -364,18 +374,25 @@
       setTimeout(() => {
         dialog.showModal();
         if (photo.complete && photo.naturalWidth) {
-          status.hidden = true;
-          photo.hidden = false;
+          revealPhoto();
           return;
         }
         photo.hidden = true;
+        sendGift.hidden = true;
         status.textContent = '正在打开照片…';
         status.hidden = false;
         photo.src = location.pathname + '/photo';
       }, motion.matches ? 0 : 340);
     });
-    photo.onload = () => { status.hidden = true; photo.hidden = false; };
+    function revealPhoto() {
+      status.hidden = true;
+      photo.hidden = false;
+      sendGift.hidden = false;
+    }
+    photo.onload = revealPhoto;
     photo.onerror = () => {
+      photo.hidden = true;
+      sendGift.hidden = true;
       photo.removeAttribute('src');
       status.textContent = '照片加载失败，关闭礼物后可以再试一次。';
     };
